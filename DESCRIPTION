@@ -1,0 +1,18 @@
+Package: TabellerOgGrafer
+Type: Package
+Title: Plotter og udskriver tabeller og grafer
+Version: 0.1.0
+Author: Kübranur Sahan <kuebranur.sahan@regionh.dk>
+Maintainer: Kübranur Sahan <kuebranur.sahan@regionh.dk>
+Description: Pakken indeholder funktioner til at plotte tabeller og grafer.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.6.0)
+Imports:
+    grid (>= 3.6.1),
+    gridExtra (>= 2.3),
+    grDevices (>= 3.6.0),
+    stats (>= 3.6.0),
+    graphics (>= 3.6.0)
+RoxygenNote: 7.0.2
