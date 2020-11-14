@@ -14,5 +14,6 @@ Imports:
     gridExtra (>= 2.3),
     grDevices (>= 3.6.0),
     stats (>= 3.6.0),
-    graphics (>= 3.6.0)
+    graphics (>= 3.6.0),
+    dplyr (>= 1.0.2)
 RoxygenNote: 7.0.2

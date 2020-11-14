@@ -124,6 +124,7 @@ delTekstOpEfterInchLaengde <- function(teksten, maksLaengdeInch, cexPaaTeksten =
 #' @param overskrift en character vector eller NA, Overskriften på plottet. Hvis NA så vil overskriften sættes på ud fra xVariablen og yVariablen
 #' @param navnPaaXAksen en character string eller NA, Navnet på x-aksen
 #' @param navnPaaYAksen en character string eller NA, Navnet på y-aksen
+#' @param beregnMiddelOgGraenseVaerdier TRUE/FALSE værdi, Hvis TRUE beregnes og plottes middelværdi og grænseværdierne.
 #' @param middelVariabel en character string eller NA, Navnet på middelværdi-variablen. Hvis NA plottes der ingen middelværdi.
 #' @param graenseVariabler en character vector af længden to eller NA. Navnet på grænsevariablerne. Hvis NA plottes der ingen grænseværdier.
 #'
@@ -139,9 +140,23 @@ delTekstOpEfterInchLaengde <- function(teksten, maksLaengdeInch, cexPaaTeksten =
 #' @seealso \code{\link{komTitelPaaPlot}}
 #'
 #' @examples
+#' antalPatienterDat <- data.frame("maaned" = rep(month.name[1:12], 2),
+#'                                 "antal" = sample(100:150, 24),
+#'                                 stringsAsFactors = FALSE)
+#'
+#' enkeltLinePlot(datasaet = antalPatienterDat,
+#'                xVariablen = "maaned",
+#'                yVariablen = "antal",
+#'                overskrift = "Antal patienter med x sygdom i 2018",
+#'                navnPaaXAksen = "Maaned for besoeg paa afdelingen",
+#'                navnPaaYAksen = "Antal patienter",
+#'                beregnMiddelOgGraenseVaerdier = TRUE)
+#'
+#'
 #' antalPatienterDat <- data.frame("maaned" = month.name[1:12],
 #'                                 "antal" = sample(100:150, 12),
 #'                                 stringsAsFactors = FALSE)
+#'
 #' antalPatienterDat$nedreGraense <- mean(antalPatienterDat$antal) - 3 * sd(antalPatienterDat$antal)
 #' antalPatienterDat$oevreGraense <- mean(antalPatienterDat$antal) + 3 * sd(antalPatienterDat$antal)
 #'
@@ -154,13 +169,14 @@ delTekstOpEfterInchLaengde <- function(teksten, maksLaengdeInch, cexPaaTeksten =
 #'                graenseVariabler = c("nedreGraense", "oevreGraense"))
 #'
 enkeltLinePlot <- function(datasaet,
-                            xVariablen,
-                            yVariablen,
-                            overskrift = NA,
-                            navnPaaXAksen = NA,
-                            navnPaaYAksen = NA,
-                            middelVariabel = NA,
-                            graenseVariabler = NA){
+                           xVariablen,
+                           yVariablen,
+                           overskrift = NA,
+                           navnPaaXAksen = NA,
+                           navnPaaYAksen = NA,
+                           beregnMiddelOgGraenseVaerdier = FALSE,
+                           middelVariabel = NA,
+                           graenseVariabler = NA){
 
   # Tjekker om inputvariablene har den rigtige objecttype
   if(!("data.frame" %in% class(datasaet)) |
@@ -169,6 +185,7 @@ enkeltLinePlot <- function(datasaet,
      ((class(overskrift) != "character" & all(!is.na(overskrift))) | (class(overskrift) == "character" & length(unlist(strsplit(as.character(overskrift), "\n"))) > 3 )|
       (class(navnPaaXAksen) != "character" & all(!is.na(navnPaaXAksen)) & length(unlist(strsplit(as.character(navnPaaXAksen), "\n"))) != 1) |
       (class(navnPaaYAksen) != "character" & all(!is.na(navnPaaYAksen)) & length(unlist(strsplit(as.character(navnPaaYAksen), "\n"))) != 1) |
+      !(beregnMiddelOgGraenseVaerdier %in% c(TRUE, FALSE)) |
       (class(middelVariabel) != "character" & all(!is.na(middelVariabel)) & length(middelVariabel) != 1) |
       ((class(graenseVariabler) != "character" & all(!is.na(graenseVariabler))) | (class(graenseVariabler) == "character" & length(graenseVariabler) != 2)))){
 
@@ -177,6 +194,7 @@ enkeltLinePlot <- function(datasaet,
     - datasaet skal være en data.frame.
     - xVariablen og yVariablen skal være en character string af længden en.
     - overskriften skal være en character vektor af en maks længde på tre eller Na.
+    - beregnMiddelOgGraenseVaerdier skal være TRUE/FALSE.
     - grænseVariabler skal være en character vektor af længden to eller Na.
     - Resten skal enten være character eller NA.")
 
@@ -191,7 +209,7 @@ enkeltLinePlot <- function(datasaet,
   }
 
   # Tjekker om grænsevariablene findes i datasættet
-  if(!is.na(middelVariabel)){
+  if(!is.na(middelVariabel) & !beregnMiddelOgGraenseVaerdier){
 
     if(!(middelVariabel %in% colnames(datasaet))){
 
@@ -202,7 +220,7 @@ enkeltLinePlot <- function(datasaet,
   }
 
   # Tjekker om grænsevariablene findes i datasættet
-  if(all(!is.na(graenseVariabler))){
+  if(all(!is.na(graenseVariabler)) & !beregnMiddelOgGraenseVaerdier){
 
     if(any(!(graenseVariabler %in% colnames(datasaet)))){
 
@@ -235,7 +253,7 @@ enkeltLinePlot <- function(datasaet,
   colnames(datasaet)[colnames(datasaet) == xVariablen] <- "xVariablen"
   colnames(datasaet)[colnames(datasaet) == yVariablen] <- "yVariablen"
 
-  # Laver x-variablen til en factorm hvis ikke det er en factor
+  # Laver x-variablen til en factor, hvis ikke det er en factor
   if(!(class(datasaet$xVariablen) %in% c("numeric", "integer", "factor", "POSIXct", "POSIXlt", "Date"))){
 
     datasaet$xVariablen <- factor(datasaet$xVariablen, levels = unique(datasaet$xVariablen))
@@ -245,6 +263,25 @@ enkeltLinePlot <- function(datasaet,
     datasaet$xVariablen <- as.factor(datasaet$xVariablen)
 
   }
+
+  if(beregnMiddelOgGraenseVaerdier){
+    # Beregner y-værdien pr x-værdi
+    datasaet <- aggregate(yVariablen ~ xVariablen, data = datasaet, FUN = sum) %>%
+      arrange(xVariablen)
+
+    # Beregner middel- og grænseværdierne
+    datasaet <- datasaet %>%
+      mutate(middelvaerdien = mean(yVariablen),
+             standarafvigelse = sd(yVariablen),
+             nedreGraense = middelvaerdien - 3 * standarafvigelse,
+             oevreGraense = middelvaerdien + 3 * standarafvigelse)
+
+    # Definerer variabelnavnene så samme kode som til middel- og grænseværdier angivet i input kan bruges
+    middelVariabel <- "middelvaerdien"
+    graenseVariabler <- c("nedreGraense", "oevreGraense")
+
+  }
+
 
   # Finder x-limit værdierne
   xlimMdl <- c(min(as.numeric(datasaet$xVariablen)), max(as.numeric(datasaet$xVariablen)))
@@ -274,8 +311,8 @@ enkeltLinePlot <- function(datasaet,
   if(all(!is.na(graenseVariabler))){
 
     ylimMdl <- c(ifelse((min(datasaet[graenseVariabler], datasaet$yVariablen) - 1) < 0,
-                    round((min(datasaet[graenseVariabler], datasaet$yVariablen) - 1) * 1.25),
-                    round((min(datasaet[graenseVariabler], datasaet$yVariablen) - 1) * 0.75)),
+                        round((min(datasaet[graenseVariabler], datasaet$yVariablen) - 1) * 1.25),
+                        round((min(datasaet[graenseVariabler], datasaet$yVariablen) - 1) * 0.75)),
                  ifelse((max(datasaet[graenseVariabler], datasaet$yVariablen) - 1) < 0,
                         round((max(datasaet[graenseVariabler], datasaet$yVariablen) + 1) * 0.75),
                         round((max(datasaet[graenseVariabler], datasaet$yVariablen) + 1) * 1.25)))
@@ -317,7 +354,7 @@ enkeltLinePlot <- function(datasaet,
     lines(as.numeric(datasaet$xVariablen), unlist(c(datasaet[middelVariabel], use.names = FALSE)), type = "l", col = "red", lty = 1, lwd = 2, pch = 1)
 
     inputTilLegend <- rbind(inputTilLegend,
-                            data.frame("tekst" = "middelværdien", "lwd" = 2, col = "red", lty = 1, stringsAsFactors = FALSE))
+                            data.frame("tekst" = ifelse(length(unique(datasaet[middelVariabel])) == 1, paste0("middelværdien ", round(unique(datasaet[middelVariabel]), 2)), "middelværdien"), "lwd" = 2, col = "red", lty = 1, stringsAsFactors = FALSE))
 
   }
 
@@ -389,12 +426,12 @@ enkeltLinePlot <- function(datasaet,
 #'               navnPaaYAksen = "Antal patienter")
 #'
 flereLinePlot <- function(datasaet,
-                            xVariablen,
-                            yVariablerne,
-                            yVariablerneNavneTilLegend = NA,
-                            overskrift = NA,
-                            navnPaaXAksen = NA,
-                            navnPaaYAksen = NA){
+                          xVariablen,
+                          yVariablerne,
+                          yVariablerneNavneTilLegend = NA,
+                          overskrift = NA,
+                          navnPaaXAksen = NA,
+                          navnPaaYAksen = NA){
 
   # Tjekker om inputvariablene har den rigtige objecttype
   if(!("data.frame" %in% class(datasaet)) |
